@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>My Instagram Web App</title>
+	<!-- Include necessary stylesheets, JavaScript libraries, etc. -->
+</head>
+<body>
+
+    <script>
+        window.fbAsyncInit = function() {
+          FB.init({
+            appId            : '9023666841038430',
+            autoLogAppEvents : true,
+            xfbml            : true,
+            version          : 'v16.0'
+          });
+        };
+      </script>
+      <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+          
+	<!-- Your HTML content goes here -->
+	<!-- For example, a login button that triggers the FB.login() function -->
+	<button onclick="login()">Login with Facebook</button>
+
+	<!-- Include your JavaScript code here -->
+	<script>
+		function login() {
+			FB.login(function(response) {
+				console.log(response);
+			}, {
+				config_id: '172127899060667', // configuration ID goes here
+				auth_type: 'code' // must be set to 'code' for SUAT
+			});
+		}
+	</script>
+</body>
+</html>

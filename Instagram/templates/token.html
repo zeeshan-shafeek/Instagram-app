@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Token Page</h1>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      var accessToken = window.location.hash.substring(1).split('=')[1];
+      $.ajax({
+        url: '/app/token',
+        data: { 'access_token': accessToken },
+        success: function(response) {
+          // handle the server's response here
+        }
+      });
+    });
+  </script>
+
+  <p>{{access_token}}</p>
+{% endblock %}
