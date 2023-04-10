@@ -2,8 +2,11 @@ from django.shortcuts import render, redirect
 import requests
 from .models import *
 from django.contrib.auth.models import User
-import json
 
+
+import json
+import requests
+from datetime import datetime
 
 app_id = 1178391262840909
 app_secret = '8865398dc10f48900b9f3c57d83b93b8'
@@ -69,9 +72,9 @@ def token(request):
 
     if User.objects.filter(email=email).exists() or User.objects.filter(username=username).exists():
         
-        user = User.objects.filter(username=username)
+        user = User.objects.get(username=username)
     else:
-        user = User.objects.create_user(username=username, email=email, password="123qweasd")
+        user = User.objects.create_user(username=username, email=email, first_name= first_name, last_name= last_name, password="123qweasd")
 
     
 
@@ -86,16 +89,77 @@ def token(request):
         fb_name = page['name']
         
         # check if SocialPage already exists with same fb_id  
-        if not SocialPage.objects.filter(fb_id=page_id).exists():
+        if not SocialPage.objects.filter(page_id=page_id).exists():
 
             # create a new SocialPage object and save it to the database
             social_page = SocialPage(user=user, fb_name=fb_name, page_id=page_id, access_token=access_token)
             social_page.save()
+        else:
+            social_page = SocialPage.objects.get(page_id=page_id)
 
-    # now we have the data for all the pages for this specific user, now we can move on to saving all the conversation of every page
+    # now we have the data for all the pages for this specific user, now we can move on to saving all the conversations for every page
 
     for page in SocialPage.objects.filter(user=user):
-        conversation_response = requests.get(f'{graph_uri}{page.page_id}/conversations?platform=instagram&access_token={page.access_token}')
+        conversation_fields = "id,messages{created_time,from,id,message,to}"
+        conversations_response = requests.get(f'{graph_uri}{page.page_id}/conversations?fields={conversation_fields}&platform=instagram&access_token={page.access_token}')
+        conversations_data = conversations_response.json()['data']
+        for conversation in conversations_data:
+
+            conversation_id = conversation['id']
+
+            # check if conversation already exists with same id 
+            if not Conversation.objects.filter(conversation_id= conversation_id).exists():
+
+                conversation_obj = Conversation(page=page, conversation_id= conversation_id)
+                conversation_obj.save()
+            else:
+                conversation_obj = Conversation.objects.get(conversation_id= conversation_id)
+
+
+            messages_data = conversation['messages']['data']
+            for message in messages_data:
+
+                message_id = message['id']
+
+                # check if message already exists with same id 
+                if not Message.objects.filter(message_id=message_id).exists():
+
+                    create_time= datetime.strptime(message['created_time'], '%Y-%m-%dT%H:%M:%S%z')
+                    if not InstaUser.objects.filter(user_id= message['from']['id']):
+                        from_user = InstaUser(user_id= message['from']['id'], username= message['from']['username'])
+                        from_user.save()
+                    else:
+                        from_user = InstaUser.objects.get(user_id= message['from']['id'])
+
+                    if not InstaUser.objects.filter(user_id= message['to']['data'][0]['id']):
+                        to_user = InstaUser(user_id= message['to']['data'][0]['id'], username= message['to']['data'][0]['username'])
+                        to_user.save()
+                    else:
+                        to_user = InstaUser.objects.get(user_id= message['to']['data'][0]['id'])
+
+                    message_obj = Message(conversation= conversation_obj,
+                                            created_time= create_time,
+                                            message_id= message['id'],
+                                            from_user=from_user,
+                                            to_user=to_user,
+                                            message_body=message['message'])
+                    message_obj.save()
+
+
+    context = {
+        'status': status,
+        'data':data,
+        
+    }
+    return render(request, 'token.html', context)
+
+
+
+
+
+
+
+    """conversation_response = requests.get(f'{graph_uri}{page.page_id}/conversations?platform=instagram&access_token={page.access_token}')
         conversations_data = conversation_response.json()['data']
         for conversation in conversations_data:
             conversation_id = conversation['id']
@@ -107,6 +171,8 @@ def token(request):
                 conversation = Conversation(page=page, id= conversation_id)
                 conversation.save()
 
+
+    # now that we have all conversations, we can get every message 
     for page in SocialPage.objects.filter(user=user):
         for conversation in Conversation.objects.filter(id=page.page_id):
             messages_response = requests.get(f'{graph_uri}{conversation.id}?feilds=messages&access_token={page.access_token}')
@@ -119,8 +185,8 @@ def token(request):
                 if not Message.objects.filter(id=message_id).exists():
 
                     # create a new conversation object and save it to the database
-                    message = Message(conversation=conversation, id= message_id, )
-                    conversation.save()
+                    message = Message(conversation=conversation, id= message_id, message_body="message loading...")
+                    message.save()
 
 
 
@@ -134,3 +200,4 @@ def token(request):
     }
     return render(request, 'token.html', context)
 
+"""
