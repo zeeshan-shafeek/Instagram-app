@@ -17,8 +17,7 @@ graph_uri = 'https://graph.facebook.com/v16.0/'
 
 # Create your views here.
 def home(request):
-
-    
+   
     permissions = ('email,'
                    'pages_show_list,'
                    'instagram_basic,'
@@ -42,7 +41,7 @@ def home(request):
 
 def token(request):
     
-    # when we reach on this page, we have gotten our first code and now we will send it to get our access token
+    # when we reach on this page, we have gotten our first access code and now we will send it to get our access token
 
 
     code = request.GET.get('code', '')
@@ -80,13 +79,18 @@ def token(request):
     
     # now that we have the access token, lets get the details of the user and make a new user
 
-    user_response = requests.get(f'{graph_uri}me?fields=id,email,first_name,last_name&access_token={access_token}')
+    user_fields = ('id,'
+                   'email,'
+                   'first_name,'
+                   'last_name')
+    
+    user_response = requests.get(f'{graph_uri}me?fields={user_fields}&access_token={access_token}')
     
     
     
     # just for checking, will delete eventually
     data = user_response.json()
-
+    print(data)
     username = user_response.json()['id']
     email = user_response.json()['email']
     first_name = user_response.json()['first_name']
@@ -111,13 +115,17 @@ def token(request):
         fb_name = page['name']
         
         # check if SocialPage already exists with same fb_id  
-        if not SocialPage.objects.filter(page_id=page_id).exists():
 
-            # create a new SocialPage object and save it to the database
-            social_page = SocialPage(user=user, fb_name=fb_name, page_id=page_id, access_token=access_token)
-            social_page.save()
-        else:
-            social_page = SocialPage.objects.get(page_id=page_id)
+
+        social_page, created = SocialPage.objects.update_or_create(
+            page_id=page_id,
+            defaults={
+                'user': user,
+                'fb_name': fb_name,
+                'access_token': access_token,
+            }
+        )
+
 
     # now we have the data for all the pages for this specific user, now we can move on to saving all the conversations for every page
 
