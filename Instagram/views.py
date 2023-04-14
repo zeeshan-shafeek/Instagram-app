@@ -19,7 +19,18 @@ graph_uri = 'https://graph.facebook.com/v16.0/'
 def home(request):
 
     
-    permissions = 'email%2Cpages_show_list%2Cinstagram_basic%2Cinstagram_manage_comments%2Cinstagram_manage_insights%2Cinstagram_content_publish%2Cinstagram_manage_messages%2Cpages_read_engagement%2Cpages_manage_metadata%2Cpublic_profile'
+    permissions = ('email,'
+                   'pages_show_list,'
+                   'instagram_basic,'
+                   'instagram_manage_comments,'
+                   'instagram_manage_insights,'
+                   'instagram_content_publish,'
+                   'instagram_manage_messages,'
+                   'pages_read_engagement,'
+                   'pages_manage_metadata,'
+                   'public_profile'
+                   )
+    
     url = f'https://www.facebook.com/v16.0/dialog/oauth?client_id={app_id}&redirect_uri={redirect_uri}&scope={permissions}'
     # print(access_token)
     context = {
@@ -57,12 +68,23 @@ def token(request):
     else:
         print(response.url)
         status = 'failure'
-    
-    data0 = response.json()
+        data = ''
 
+        context = {
+        'status': status,
+        'data':data,
+        
+    }
+        return render(request, 'token.html', context)
+    
+    
     # now that we have the access token, lets get the details of the user and make a new user
 
     user_response = requests.get(f'{graph_uri}me?fields=id,email,first_name,last_name&access_token={access_token}')
+    
+    
+    
+    # just for checking, will delete eventually
     data = user_response.json()
 
     username = user_response.json()['id']
@@ -74,7 +96,7 @@ def token(request):
         
         user = User.objects.get(username=username)
     else:
-        user = User.objects.create_user(username=username, email=email, first_name= first_name, last_name= last_name, password="123qweasd")
+        user = User.objects.create_user(username=username, email=email, first_name= first_name, last_name= last_name)
 
     
 
@@ -100,7 +122,15 @@ def token(request):
     # now we have the data for all the pages for this specific user, now we can move on to saving all the conversations for every page
 
     for page in SocialPage.objects.filter(user=user):
-        conversation_fields = "id,messages{created_time,from,id,message,to}"
+        conversation_fields = ('id,'
+                               'messages'
+                                    '{created_time,'
+                                    'from,'
+                                    'id,'
+                                    'message,'
+                                    'to}'
+                               )
+
         conversations_response = requests.get(f'{graph_uri}{page.page_id}/conversations?fields={conversation_fields}&platform=instagram&access_token={page.access_token}')
         conversations_data = conversations_response.json()['data']
         for conversation in conversations_data:
