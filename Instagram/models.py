@@ -9,15 +9,22 @@ class SocialPage(models.Model):
     fb_name =  models.CharField(max_length=200, null=False)
     page_id =models.CharField(max_length=20, null=False)
     access_token = models.CharField(max_length= 200)
+    insta_username = models.CharField(max_length=200, null=False)
 
     def __str__(self):
-        return self.fb_name
+        return self.fb_name + f" ({self.insta_username})"
 
 
 class Conversation(models.Model):
     page = models.ForeignKey(SocialPage, on_delete= models.CASCADE)
     conversation_id = models.CharField(max_length=1000, null=False)
 
+    def __str__(self):
+        users = set([message.from_user for message in self.message_set.all()] + [message.to_user for message in self.message_set.all()])
+        page_user = self.page.insta_username
+        users = [user for user in users if user.username != page_user]
+        username = ', '.join([str(user) for user in users])
+        return f'Conversation with "{username}"'
 
 class InstaUser(models.Model):
     user_id = models.CharField(max_length=200, null=False)
