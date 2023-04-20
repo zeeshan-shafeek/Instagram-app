@@ -50,7 +50,7 @@ def token(request):
     }
 
     
-    # print(code)
+
     params = {
             'client_id': app_id,
             'redirect_uri': redirect_uri,
@@ -117,7 +117,8 @@ def token(request):
 
         insta_user_response = requests.get(f'{graph_uri}{page_id}?fields=instagram_accounts%7Busername%7D&access_token={access_token}')
         insta_username = insta_user_response.json()['instagram_accounts']['data'][0]['username']
-        print(insta_username)
+
+
         # check if SocialPage already exists with same fb_id  
         social_page, created = SocialPage.objects.update_or_create(
             page_id=page_id,
