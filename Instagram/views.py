@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect
 import requests
 from .models import *
 from django.contrib.auth.models import User
-
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 
 import json
 import requests
@@ -71,9 +72,9 @@ def token(request):
 
         context = {
         'status': status,
-        'data':data,
-        
+        'data':data,   
     }
+        
         return render(request, 'token.html', context)
     
     
@@ -152,7 +153,9 @@ def token(request):
             else:
                 cursor_statement = f'&after={conversation_cursor}'
 
-            conversations_response = requests.get(f'{graph_uri}{page.page_id}/conversations?fields={conversation_fields}&platform=instagram&access_token={page.access_token}{cursor_statement}')
+            conversations_response = requests.get(
+                f'{graph_uri}{page.page_id}/conversations?fields={conversation_fields}&platform=instagram&access_token={page.access_token}{cursor_statement}')
+            
             conversations_data = conversations_response.json()['data']
             try:
                 conversation_cursor = conversations_response.json()['paging']['cursors']['after']
@@ -188,11 +191,7 @@ def token(request):
                     
                     for message in messages_data:
 
-                        message_id = message['id']
-
-
-                        create_time= datetime.strptime(message['created_time'], '%Y-%m-%dT%H:%M:%S%z')
-                        
+                        create_time= datetime.strptime(message['created_time'], '%Y-%m-%dT%H:%M:%S%z')                       
 
                         from_user, created = InstaUser.objects.update_or_create(
                             user_id= message['from']['id'],
@@ -245,19 +244,6 @@ def token(request):
                         # here we set the cursor to '' so that the loop breaks
                         messages_cursor = ''
                     
-
-
-
-                        
-
-
-
-
-
-
-
-
-
     context = {
         'status': status,
         'data':data,
@@ -265,51 +251,6 @@ def token(request):
     }
     return render(request, 'token.html', context)
 
-
-
-
-
-
-
-    """conversation_response = requests.get(f'{graph_uri}{page.page_id}/conversations?platform=instagram&access_token={page.access_token}')
-        conversations_data = conversation_response.json()['data']
-        for conversation in conversations_data:
-            conversation_id = conversation['id']
-
-            # check if conversation already exists with same id 
-            if not Conversation.objects.filter(id=conversation_id).exists():
-
-                # create a new conversation object and save it to the database
-                conversation = Conversation(page=page, id= conversation_id)
-                conversation.save()
-
-
-    # now that we have all conversations, we can get every message 
-    for page in SocialPage.objects.filter(user=user):
-        for conversation in Conversation.objects.filter(id=page.page_id):
-            messages_response = requests.get(f'{graph_uri}{conversation.id}?feilds=messages&access_token={page.access_token}')
-            messages_response_dict = json.loads(messages_response)
-            messages_data = messages_response_dict['messages']['data']
-            for message in messages_data:
-                message_id = message['id']
-
-                # check if conversation already exists with same id 
-                if not Message.objects.filter(id=message_id).exists():
-
-                    # create a new conversation object and save it to the database
-                    message = Message(conversation=conversation, id= message_id, message_body="message loading...")
-                    message.save()
-
-
-
-    
-
-    context = {
-        'status': status,
-        'data0': data0,
-        'data':data,
-        
-    }
-    return render(request, 'token.html', context)
-
-"""
+@csrf_exempt
+def get_messages(request):
+    return HttpResponse('pong')

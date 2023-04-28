@@ -6,11 +6,7 @@ urlpatterns = [
 
     path('', views.home, name= 'home'),
     path('token/', views.token, name='token'),
+    path('api/test/', views.get_messages, name='hello')
 
 ]
 
-
-from django.views.generic import RedirectView
-urlpatterns += [
-    path('favicon.ico', RedirectView.as_view(url='/static/favicon.ico', permanent=True)),
-]

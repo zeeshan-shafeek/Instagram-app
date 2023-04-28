@@ -1,12 +1,44 @@
+
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+	<title>Login with Facebook</title>
+	<style>
+		body {
+			background-color: #1C2B33;
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 0;
+		}
+		.container {
+			margin: 100px auto;
+			max-width: 600px;
+			padding: 30px;
+			background-color: #fff;
+			box-shadow: 0 2px 4px rgba(0,0,0,.1);
+			border-radius: 5px;
+			text-align: center;
+		}
+		.btn {
+			display: inline-block;
+			padding: 12px 24px;
+			background-color: #0080FB;
+			color: #fff;
+			border-radius: 3px;
+			text-decoration: none;
+			transition: background-color .3s ease;
+		}
+		.btn:hover {
+			background-color: #0668E1;
+		}
+	</style>
 </head>
 <body>
-    <a href= {{url}}> this should work</a>
+	<div class="container">
+		<h1>Login with Facebook</h1>
+		<p>Click the button below to login with your Facebook account</p>
+		<a href="{{ url }}" class="btn">Login with Facebook</a>
+	</div>
 </body>
 </html>
